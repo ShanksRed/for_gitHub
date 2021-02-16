@@ -60,6 +60,12 @@ public:
 		T& const get_value() {
 			return this->current_node->data;
 		}
+		Iterator& Next(Iterator& Node) {
+			if (Node.current_node)
+				Node.current_node = Node.current_node->next.get();
+			return Node;
+		}
+
 
 	private:
 
@@ -73,6 +79,13 @@ public:
 	void pop();
 	void clear();
 	bool isEmpty();
+	inline Iterator Begin() const noexcept;
+	inline Iterator Next(Iterator&)const noexcept;
+	inline Iterator End()const noexcept;
+	T& findValue(T);
+	void fill_rnumb(int, int, int);
+	void write_to_file(std::filesystem::path filePath);
+	void read_fr_file(std::filesystem::path filePath);
 
 };
 
@@ -126,4 +139,80 @@ inline bool Queue<T>::isEmpty()
 	else return false;
 }
 
+template<typename T>
+inline typename Queue<T>::Iterator Queue<T>::Begin() const noexcept
+{
+	auto temp = this->p_first.get();
+	return Iterator(temp);
+}
 
+template<typename T>
+inline typename Queue<T>::Iterator Queue<T>::Next(Iterator& current) const noexcept
+{
+	/*
+	if (current.current_node)
+		Iterator(current.current_node->next.get());
+	else return Iterator(nullptr);
+	*/
+	return current.Next(current);
+}
+
+template<typename T>
+inline typename Queue<T>::Iterator Queue<T>::End() const noexcept
+{
+	return Iterator(nullptr);
+}
+
+template<typename T>
+inline T& Queue<T>::findValue(T search_numb)
+{
+	pointNode* head = this->p_first.get();
+	int count{1};
+	while (head) {
+		if (head->data == search_numb)
+			return count;
+		else {
+			count++;
+			head = head->next.get();
+		}
+	}
+	throw std::exception("число не найдено");
+}
+
+template<typename T>
+inline void Queue<T>::fill_rnumb(int counter, int l_border, int r_border)
+{
+	std::random_device rd;
+	std::mt19937 rng(rd());
+	std::uniform_int_distribution<int> uni(l_border, r_border);
+	while (counter) {
+		auto random_integer = uni(rng);
+		this->push(random_integer);
+		counter--;
+	}
+}
+template<typename T>
+inline void Queue<T>::write_to_file(std::filesystem::path filePath)
+{
+	std::wofstream writeFile(filePath, std::ios::trunc);
+	pointNode* head = this->p_first.get();
+	while (head) {
+		writeFile << head->data << " ";
+		head = head->next.get();
+
+	}
+	writeFile.close();
+}
+
+template<typename T>
+inline void Queue<T>::read_fr_file(std::filesystem::path filePath)
+{
+
+	std::wifstream readFile(filePath, std::ios::end);
+	T symb;
+	while (readFile >> symb) {
+		this->push(symb);
+	}
+
+
+}

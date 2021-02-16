@@ -4,13 +4,14 @@
 
 int main() {
 	Queue<int> m_queue{};
-	std::cout<<m_queue.isEmpty();
-	m_queue.push(5);
-	m_queue.push(6);
-	m_queue.push(7);
-	m_queue.push(8);
-	std::cout << m_queue.isEmpty();
-	m_queue.clear();
-	std::cout << m_queue.isEmpty();
+	m_queue.fill_rnumb(9, 1, 10);
+	m_queue.write_to_file("m_txt.txt");
+	m_queue.read_fr_file("m_txt.txt");
+
+	for (auto temp = m_queue.Begin(); temp != m_queue.End(); ++temp) {
+		std::cout << temp.get_value();
+	}
+
+	
 
 }
