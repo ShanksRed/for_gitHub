@@ -11,10 +11,10 @@ class Queue {
 private:
 	struct pointNode {
 		T data;
-		std::shared_ptr<pointNode> next;
+		pointNode* next;
 
-		pointNode() :data(std::move(T{})), next(std::move(std::shared_ptr<pointNode>{})) {}
-		pointNode(T n_data, std::shared_ptr<pointNode> ptr) : data(std::move(n_data)), next(std::move(ptr)) {}
+		pointNode() :data(0), next(nullptr) {}
+		pointNode(T n_data, pointNode* ptr) : data(n_data), next(ptr) {}
 
 		bool operator!=(Queue<T>::pointNode obj1) const {
 			if (this) return true;
@@ -32,9 +32,9 @@ private:
 
 
 	};
-	std::shared_ptr<pointNode> p_first;
-	std::shared_ptr<pointNode> p_last;
-	int size;
+	pointNode* p_first;
+	pointNode* p_last;
+
 public:
 
 	class Iterator {
@@ -52,12 +52,12 @@ public:
 		}
 		void operator++() {
 			if (this->current_node)
-				this->current_node = this->current_node->next.get();
+				this->current_node = this->current_node->next;
 		}
 		bool operator !=(const Iterator& pNode) {
 			return this->current_node != pNode.current_node;
 		}
-		T& const get_value() {
+		T const get_value() {
 			return this->current_node->data;
 		}
 		Iterator& Next(Iterator& Node) {
@@ -74,11 +74,12 @@ public:
 	};
 
 	using type_t = T;
-	Queue() : p_first(std::shared_ptr<pointNode>{}), p_last(std::shared_ptr<pointNode>{}), size(0) {}
+	Queue() : p_first(nullptr), p_last(nullptr) {}
 	void push(const T& item);
 	void pop();
+	T front();
 	void clear();
-	bool isEmpty();
+	bool isEmpty()const;
 	inline Iterator Begin() const noexcept;
 	inline Iterator Next(Iterator&)const noexcept;
 	inline Iterator End()const noexcept;
@@ -86,6 +87,7 @@ public:
 	void fill_rnumb(int, int, int);
 	void write_to_file(std::filesystem::path filePath);
 	void read_fr_file(std::filesystem::path filePath);
+	inline void print_stack() const noexcept;
 
 };
 
@@ -94,7 +96,9 @@ public:
 template <class T>
 void Queue<T>::push(const T& item)
 {
-	std::shared_ptr<pointNode> new_end = std::make_shared<pointNode>(item,nullptr);
+
+	pointNode* new_end = new pointNode(item, nullptr);
+
 	if (p_last)
 	{
 		p_last->next = new_end;
@@ -104,26 +108,28 @@ void Queue<T>::push(const T& item)
 	{
 		p_first = p_last;
 	}
-	++size;
 }
 
 
 template <class T>
 void Queue<T>::pop()
 {
-	/*
-	auto ptr = std::move(p_first);
-	p_first = ptr->next;
-	if (!p_first)
-	{
-		p_last.reset();
-	}
-	ptr.reset();
-	--size;
-	*/
-	p_first = std::move(p_first->next);
-	if (!p_first) p_last.reset();
-	--size;
+
+	if (p_first == nullptr) 
+		throw std::exception("Cтек пуст");
+	auto temp = p_first;
+	p_first = p_first->next;
+	delete(temp);
+	if (p_first == nullptr) p_last = nullptr;
+
+}
+
+template<typename T>
+inline T Queue<T>::front()
+{
+	if(p_last)
+	return this->p_last->data;
+	else throw std::exception("Cтек пуст");
 }
 
 template<typename T>
@@ -133,7 +139,7 @@ inline void Queue<T>::clear()
 }
 
 template<typename T>
-inline bool Queue<T>::isEmpty()
+inline bool Queue<T>::isEmpty() const
 {
 	if (!p_first) return true;
 	else return false;
@@ -142,8 +148,8 @@ inline bool Queue<T>::isEmpty()
 template<typename T>
 inline typename Queue<T>::Iterator Queue<T>::Begin() const noexcept
 {
-	auto temp = this->p_first.get();
-	return Iterator(temp);
+	//auto temp = this->p_first.get();
+	return Iterator(p_first);
 }
 
 template<typename T>
@@ -166,14 +172,14 @@ inline typename Queue<T>::Iterator Queue<T>::End() const noexcept
 template<typename T>
 inline T& Queue<T>::findValue(T search_numb)
 {
-	pointNode* head = this->p_first.get();
+	pointNode* head = this->p_first;
 	int count{1};
 	while (head) {
 		if (head->data == search_numb)
 			return count;
 		else {
 			count++;
-			head = head->next.get();
+			head = head->next;
 		}
 	}
 	throw std::exception("число не найдено");
@@ -195,10 +201,10 @@ template<typename T>
 inline void Queue<T>::write_to_file(std::filesystem::path filePath)
 {
 	std::wofstream writeFile(filePath, std::ios::trunc);
-	pointNode* head = this->p_first.get();
+	pointNode* head = this->p_first;
 	while (head) {
 		writeFile << head->data << " ";
-		head = head->next.get();
+		head = head->next;
 
 	}
 	writeFile.close();
